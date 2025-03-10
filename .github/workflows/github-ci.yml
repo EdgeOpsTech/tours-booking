@@ -25,10 +25,12 @@ jobs:
 
       - name: Set Environment Variables
         run: |
-          echo "REPO_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-          echo "REPO_NAME=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          REPO_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          REPO_NAME=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')
+          echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
           echo "SOURCE_REGISTRY=ghcr.io" >> $GITHUB_ENV
-          echo "SOURCE_IMAGE=ghcr.io/${REPO_OWNER}/${REPO_NAME}" >> $GITHUB_ENV
+          echo "SOURCE_IMAGE=ghcr.io/$REPO_OWNER/$REPO_NAME" >> $GITHUB_ENV
           echo "SOURCE_IMAGE_TAG=latest" >> $GITHUB_ENV
 
       - name: Debug Environment Variables
