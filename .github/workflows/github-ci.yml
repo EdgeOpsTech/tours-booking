@@ -1,4 +1,4 @@
-name: Build & Publish to GitHub Package Registry (GHCR)
+name: Build & Deploy to Kubernetes
 
 on:
   push:
@@ -46,12 +46,43 @@ jobs:
 
       - name: Build and Tag Docker Image
         run: |
-          docker build \
-            -t ${SOURCE_IMAGE}:latest .
-
+          docker build -t ${SOURCE_IMAGE}:latest .
           docker tag ${SOURCE_IMAGE}:latest ${SOURCE_IMAGE}:${{ github.run_number }}
 
       - name: Push Docker Image to GHCR
         run: |
           docker push ${SOURCE_IMAGE}:latest
           docker push ${SOURCE_IMAGE}:${{ github.run_number }}
+
+  deploy:
+    runs-on: my-k8s-runner # <--- Runs on your self-hosted runner
+    needs: build # Ensures this runs only after the build job succeeds
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Environment Variables
+        run: |
+          REPO_OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          REPO_NAME=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')
+          echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+          echo "SOURCE_REGISTRY=ghcr.io" >> $GITHUB_ENV
+          echo "SOURCE_IMAGE=ghcr.io/$REPO_OWNER/$REPO_NAME" >> $GITHUB_ENV
+          echo "SOURCE_IMAGE_TAG=latest" >> $GITHUB_ENV
+
+      - name: Authenticate with GHCR (If Private)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      - name: Pull Latest Image on the Self-Hosted Runner
+        run: |
+          docker pull ${SOURCE_IMAGE}:latest
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl apply -f k8s/service.yml
+          kubectl set image deployment/tours-booking tours-booking=${SOURCE_IMAGE}:latest -n tours-booking
+          kubectl rollout status deployment/tours-booking -n tours-booking
