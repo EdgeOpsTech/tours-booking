@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tours-booking
+  namespace: tours-booking
+  labels:
+    app: tours-booking
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tours-booking
+  template:
+    metadata:
+      labels:
+        app: tours-booking
+    spec:
+      containers:
+        - name: tours-booking
+          image: ghcr.io/edgeopstech/tours-booking:latest  # Update this with your GHCR repo
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
