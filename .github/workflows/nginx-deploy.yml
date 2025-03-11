@@ -19,13 +19,17 @@ jobs:
           kubectl cluster-info 
           kubectl get nodes
 
+      - name: Delete Existing NGINX Pod (if exists)
+        run: |
+          kubectl delete pod nginx --ignore-not-found=true
+
       - name: Deploy NGINX Pod
         run: |
           kubectl run nginx --image=nginx --port=80 --restart=Never
 
       - name: Expose NGINX Pod as a Service
         run: |
-          kubectl expose pod nginx --port=80 --type=NodePort
+          kubectl expose pod nginx --port=80 --type=NodePort --overwrite=true
 
       - name: Verify Deployment
         run: |
