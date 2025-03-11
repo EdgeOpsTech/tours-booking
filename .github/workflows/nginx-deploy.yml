@@ -3,8 +3,6 @@ name: Deploy NGINX to Kubernetes
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -15,33 +13,56 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set KUBECONFIG and Ensure sudo Access
+      - name: Configure KUBECONFIG
         run: |
-          echo "Setting KUBECONFIG..."
-          export KUBECONFIG=/etc/kubernetes/admin.conf
-          echo "KUBECONFIG=/etc/kubernetes/admin.conf" >> $GITHUB_ENV
+          # Use a dedicated kubeconfig file (not admin.conf)
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_DATA" > ~/.kube/config  # Securely pass kubeconfig via GitHub Secrets
+          chmod 600 ~/.kube/config
 
-          echo "Ensuring sudo access for kubectl..."
-          sudo ls > /dev/null  # Ensures GitHub Actions can use sudo without password prompt
-          sudo chown $USER:$USER /etc/kubernetes/admin.conf
-          sudo chmod 644 /etc/kubernetes/admin.conf
-
-      - name: Debug Kubernetes Connection
+      - name: Deploy NGINX via Manifest
         run: |
-          echo "Checking Kubernetes Connection..."
-          sudo kubectl cluster-info || { echo "❌ K8s cluster not reachable!"; exit 1; }
-          sudo kubectl get nodes || { echo "❌ Failed to get nodes!"; exit 1; }
+          # Create namespace
+          kubectl create namespace nginx-test --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy NGINX to Kubernetes
+          # Deploy NGINX via Deployment/Service YAML
+          kubectl apply -f - <<EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx
+            namespace: nginx-test
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: nginx
+            template:
+              metadata:
+                labels:
+                  app: nginx
+              spec:
+                containers:
+                - name: nginx
+                  image: nginx:latest
+                  ports:
+                  - containerPort: 80
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: nginx
+            namespace: nginx-test
+          spec:
+            type: NodePort  # Use NodePort for local clusters
+            selector:
+              app: nginx
+            ports:
+              - port: 80
+                targetPort: 80
+          EOF
+
+      - name: Verify Deployment
         run: |
-          echo "Creating namespace..."
-          sudo kubectl create namespace nginx-test --dry-run=client -o yaml | sudo kubectl apply --validate=false -f -
-
-          echo "Deploying NGINX..."
-          sudo kubectl run nginx --image=nginx:latest --port=80 --namespace=nginx-test --restart=Always
-
-          echo "Exposing NGINX service..."
-          sudo kubectl expose pod nginx --type=LoadBalancer --port=80 --target-port=80 --namespace=nginx-test
-
-          echo "Waiting for rollout..."
-          sudo kubectl rollout status deployment nginx -n nginx-test || true
+          kubectl rollout status deployment/nginx -n nginx-test
+          kubectl get svc/nginx -n nginx-test  # Check assigned NodePort
