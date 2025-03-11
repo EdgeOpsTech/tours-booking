@@ -15,22 +15,33 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Debug Kubernetes Access
+      - name: Set KUBECONFIG and Ensure sudo Access
+        run: |
+          echo "Setting KUBECONFIG..."
+          export KUBECONFIG=/etc/kubernetes/admin.conf
+          echo "KUBECONFIG=/etc/kubernetes/admin.conf" >> $GITHUB_ENV
+
+          echo "Ensuring sudo access for kubectl..."
+          sudo ls > /dev/null  # Ensures GitHub Actions can use sudo without password prompt
+          sudo chown $USER:$USER /etc/kubernetes/admin.conf
+          sudo chmod 644 /etc/kubernetes/admin.conf
+
+      - name: Debug Kubernetes Connection
         run: |
           echo "Checking Kubernetes Connection..."
-          kubectl cluster-info || { echo "❌ K8s cluster not reachable!"; exit 1; }
-          kubectl get nodes || { echo "❌ Failed to get nodes!"; exit 1; }
+          sudo kubectl cluster-info || { echo "❌ K8s cluster not reachable!"; exit 1; }
+          sudo kubectl get nodes || { echo "❌ Failed to get nodes!"; exit 1; }
 
       - name: Deploy NGINX to Kubernetes
         run: |
-          # Ensure namespace exists
-          kubectl create namespace nginx-test --dry-run=client -o yaml | kubectl apply --validate=false -f -
+          echo "Creating namespace..."
+          sudo kubectl create namespace nginx-test --dry-run=client -o yaml | sudo kubectl apply --validate=false -f -
 
-          # Deploy NGINX without a YAML file
-          kubectl run nginx --image=nginx:latest --port=80 --namespace=nginx-test --restart=Always
+          echo "Deploying NGINX..."
+          sudo kubectl run nginx --image=nginx:latest --port=80 --namespace=nginx-test --restart=Always
 
-          # Expose NGINX as a service
-          kubectl expose pod nginx --type=LoadBalancer --port=80 --target-port=80 --namespace=nginx-test
+          echo "Exposing NGINX service..."
+          sudo kubectl expose pod nginx --type=LoadBalancer --port=80 --target-port=80 --namespace=nginx-test
 
-          # Wait for rollout
-          kubectl rollout status deployment nginx -n nginx-test || true
+          echo "Waiting for rollout..."
+          sudo kubectl rollout status deployment nginx -n nginx-test || true
