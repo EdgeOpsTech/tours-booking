@@ -9,8 +9,8 @@ on:
 
 jobs:
   build:
-    # runs-on: self-hosted
-    runs-on: my-k8s-runner # <--- Runs on your self-hosted runner
+    runs-on: self-hosted
+    # runs-on: my-k8s-runner # <--- Runs on your self-hosted runner
 
     steps:
       - name: Checkout Code
