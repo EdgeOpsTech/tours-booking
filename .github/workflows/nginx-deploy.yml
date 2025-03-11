@@ -13,17 +13,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Configure KUBECONFIG
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config  # Decode base64-encoded kubeconfig
-          chmod 600 ~/.kube/config  # Tighten permissions
+      #   - name: Configure KUBECONFIG
+      #     run: |
+      #       mkdir -p ~/.kube
+      #       echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
+      #       chmod 600 ~/.kube/config
 
       - name: Verify Cluster Access
         run: |
-          kubectl config view  # Debug: Show kubeconfig
-          kubectl cluster-info # Verify API server connectivity
-          kubectl get nodes    # Confirm cluster access
+          kubectl config view  
+          kubectl cluster-info 
+          kubectl get nodes
 
       - name: Create Namespace (Skip Validation)
         run: |
