@@ -26,6 +26,14 @@ jobs:
           echo "SOURCE_IMAGE=ghcr.io/$REPO_OWNER/$REPO_NAME" >> $GITHUB_ENV
           echo "SOURCE_IMAGE_TAG=latest" >> $GITHUB_ENV
 
+      - name: Debug Environment Variables
+        run: |
+          echo "SOURCE_REGISTRY=${SOURCE_REGISTRY}"
+          echo "REPO_OWNER=${REPO_OWNER}"
+          echo "REPO_NAME=${REPO_NAME}"
+          echo "SOURCE_IMAGE=${SOURCE_IMAGE}"
+          echo "SOURCE_IMAGE_TAG=${SOURCE_IMAGE_TAG}"
+
       - name: Authenticate with GHCR (If Private)
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
