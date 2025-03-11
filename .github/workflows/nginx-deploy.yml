@@ -1,78 +1,3 @@
-# name: Deploy NGINX to Kubernetes
-
-# on:
-#   push:
-#     branches: [main]
-#   workflow_dispatch:
-
-# jobs:
-#   deploy:
-#     runs-on: self-hosted
-
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v3
-
-#       #   - name: Configure KUBECONFIG
-#       #     run: |
-#       #       mkdir -p ~/.kube
-#       #       echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
-#       #       chmod 600 ~/.kube/config
-
-#       - name: Verify Cluster Access
-#         run: |
-#           kubectl config view
-#           kubectl cluster-info
-#           kubectl get nodes
-
-#       - name: Create Namespace (Skip Validation)
-#         run: |
-#           # Temporarily skip validation to bypass connection error
-#           kubectl create namespace nginx-test --dry-run=client -o yaml | kubectl apply --validate=false -f -
-
-#       - name: Deploy NGINX
-#         run: |
-#           kubectl apply -f - <<EOF
-#           apiVersion: apps/v1
-#           kind: Deployment
-#           metadata:
-#             name: nginx
-#             namespace: nginx-test
-#           spec:
-#             replicas: 1
-#             selector:
-#               matchLabels:
-#                 app: nginx
-#             template:
-#               metadata:
-#                 labels:
-#                   app: nginx
-#               spec:
-#                 containers:
-#                 - name: nginx
-#                   image: nginx:latest
-#                   ports:
-#                   - containerPort: 80
-#           ---
-#           apiVersion: v1
-#           kind: Service
-#           metadata:
-#             name: nginx
-#             namespace: nginx-test
-#           spec:
-#             type: NodePort
-#             selector:
-#               app: nginx
-#             ports:
-#               - port: 80
-#                 targetPort: 80
-#           EOF
-
-#       - name: Verify Deployment
-#         run: |
-#           kubectl rollout status deployment/nginx -n nginx-test
-#           kubectl get svc/nginx -n nginx-test
-
 name: Deploy NGINX Pod to Kubernetes
 
 on:
@@ -94,19 +19,15 @@ jobs:
           kubectl cluster-info 
           kubectl get nodes
 
-      - name: Create Namespace (Skip Validation)
-        run: |
-          kubectl create namespace nginx-test --dry-run=client -o yaml | kubectl apply --validate=false -f -
-
       - name: Deploy NGINX Pod
         run: |
-          kubectl run nginx --image=nginx --namespace=nginx-test --port=80 --restart=Never
+          kubectl run nginx --image=nginx --port=80 --restart=Never
 
       - name: Expose NGINX Pod as a Service
         run: |
-          kubectl expose pod nginx --port=80 --type=NodePort --namespace=nginx-test
+          kubectl expose pod nginx --port=80 --type=NodePort
 
       - name: Verify Deployment
         run: |
-          kubectl get pod nginx -n nginx-test
-          kubectl get svc nginx -n nginx-test
+          kubectl get pod nginx
+          kubectl get svc nginx
