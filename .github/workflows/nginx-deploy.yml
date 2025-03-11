@@ -27,9 +27,13 @@ jobs:
         run: |
           kubectl run nginx --image=nginx --port=80 --restart=Never
 
+      - name: Delete Existing NGINX Service (if exists)
+        run: |
+          kubectl delete svc nginx --ignore-not-found=true
+
       - name: Expose NGINX Pod as a Service
         run: |
-          kubectl expose pod nginx --port=80 --type=NodePort --overwrite=true
+          kubectl expose pod nginx --port=80 --type=NodePort
 
       - name: Verify Deployment
         run: |
