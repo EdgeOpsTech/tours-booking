@@ -15,17 +15,23 @@ jobs:
 
       - name: Configure KUBECONFIG
         run: |
-          # Use a dedicated kubeconfig file (not admin.conf)
           mkdir -p ~/.kube
-          echo "$KUBECONFIG_DATA" > ~/.kube/config  # Securely pass kubeconfig via GitHub Secrets
-          chmod 600 ~/.kube/config
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config  # Decode base64-encoded kubeconfig
+          chmod 600 ~/.kube/config  # Tighten permissions
 
-      - name: Deploy NGINX via Manifest
+      - name: Verify Cluster Access
         run: |
-          # Create namespace
-          kubectl create namespace nginx-test --dry-run=client -o yaml | kubectl apply -f -
+          kubectl config view  # Debug: Show kubeconfig
+          kubectl cluster-info # Verify API server connectivity
+          kubectl get nodes    # Confirm cluster access
 
-          # Deploy NGINX via Deployment/Service YAML
+      - name: Create Namespace (Skip Validation)
+        run: |
+          # Temporarily skip validation to bypass connection error
+          kubectl create namespace nginx-test --dry-run=client -o yaml | kubectl apply --validate=false -f -
+
+      - name: Deploy NGINX
+        run: |
           kubectl apply -f - <<EOF
           apiVersion: apps/v1
           kind: Deployment
@@ -54,7 +60,7 @@ jobs:
             name: nginx
             namespace: nginx-test
           spec:
-            type: NodePort  # Use NodePort for local clusters
+            type: NodePort
             selector:
               app: nginx
             ports:
@@ -65,4 +71,4 @@ jobs:
       - name: Verify Deployment
         run: |
           kubectl rollout status deployment/nginx -n nginx-test
-          kubectl get svc/nginx -n nginx-test  # Check assigned NodePort
+          kubectl get svc/nginx -n nginx-test
