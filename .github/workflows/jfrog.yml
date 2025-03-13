@@ -1,17 +1,30 @@
-name: JFrog Integration
+name: Java CI with Maven & JFrog
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean install
+
+      - name: Run Tests
+        run: mvn test
 
       - name: Set up JFrog CLI
         uses: jfrog/setup-jfrog-cli@v4
@@ -25,11 +38,9 @@ jobs:
             --user=${{ secrets.JFROG_USERNAME }} \
             --password=${{ secrets.JFROG_TOKEN }} \
             --interactive=false
-          
-      - name: Verify JFrog Connection
-        run: |
-          jfrog rt ping
+
+      - name: Debug Build Directory
+        run: ls -la target/
 
       - name: Upload Artifact to JFrog
-        run: |
-          jfrog rt u "build/*.jar" my-repo/
+        run: jfrog rt u "target/*.jar" my-maven-repo/
