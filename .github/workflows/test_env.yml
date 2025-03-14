@@ -31,9 +31,8 @@ jobs:
       - name: Set Dynamic Artifactory Paths
         run: |
           echo "Setting ARTIFACTORY_REPO dynamically..."
-          REPO_PATH="/var/temp/$TEST_VERSION-$TEST_MINOR.amd/"
-          echo "REPO_PATH=${REPO_PATH}" >> $GITHUB_ENV
+          echo "REPO_PATH=/var/temp/${TEST_VERSION}-${TEST_MINOR}.amd/" >> $GITHUB_ENV
 
-      - name: Verify Environment Variables
+      - name: Verify Final Artifactory Path
         run: |
           echo "Final Artifactory Path: ${REPO_PATH}"
