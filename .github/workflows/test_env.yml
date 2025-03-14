@@ -15,8 +15,10 @@ jobs:
 
       - name: Set and Append Environment Variables
         run: |
-          echo "TEST_VERSION=1.2.3" >> $GITHUB_ENV
-          echo "TEST_PATH=/usr/local/bin/test" >> $GITHUB_ENV
+          TEMP1=1.2.3
+          TEMP2=/usr/local/bin/test
+          echo "TEST_VERSION=$TEMP1" >> $GITHUB_ENV
+          echo "TEST_PATH=$TEMP2" >> $GITHUB_ENV
 
       - name: Verify Environment Variables
         run: |
