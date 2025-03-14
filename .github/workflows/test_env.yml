@@ -18,8 +18,10 @@ jobs:
 
       - name: Set and Append Environment Variables
         run: |
-          echo "TEST_VERSION=1.2.3" >> $GITHUB_ENV
-          echo "TEST_MINOR=18" >> $GITHUB_ENV
+          TEMP1=1.2.3
+          TEMP2=18
+          echo "TEST_VERSION=$TEMP1" >> $GITHUB_ENV
+          echo "TEST_MINOR=$TEMP2" >> $GITHUB_ENV
 
       - name: Verify Environment Variables
         run: |
@@ -29,8 +31,9 @@ jobs:
       - name: Set Dynamic Artifactory Paths
         run: |
           echo "Setting ARTIFACTORY_REPO dynamically..."
-          echo "REPO_PATH=/var/temp/${TEST_VERSION}-${TEST_MINOR}.amd/" >> $GITHUB_ENV
+          REPO_PATH="/var/temp/$TEST_VERSION-$TEST_MINOR.arm/"
+          echo "REPO_PATH=${REPO_PATH}" >> $GITHUB_ENV
 
-      - name: Verify Final Artifactory Path
+      - name: Verify Environment Variables
         run: |
-          echo "Final Artifactory Path: $REPO_PATH"
+          echo "Final Artifactory Path: ${REPO_PATH}"
