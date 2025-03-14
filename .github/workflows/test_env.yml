@@ -18,10 +18,8 @@ jobs:
 
       - name: Set and Append Environment Variables
         run: |
-          TEMP1=1.2.3
-          TEMP2=18
-          echo "TEST_VERSION=$TEMP1" >> $GITHUB_ENV
-          echo "TEST_MINOR=$TEMP2" >> $GITHUB_ENV
+          echo "TEST_VERSION=1.2.3" >> $GITHUB_ENV
+          echo "TEST_MINOR=18" >> $GITHUB_ENV
 
       - name: Verify Environment Variables
         run: |
@@ -35,4 +33,4 @@ jobs:
 
       - name: Verify Final Artifactory Path
         run: |
-          echo "Final Artifactory Path: ${REPO_PATH}"
+          echo "Final Artifactory Path: $REPO_PATH"
