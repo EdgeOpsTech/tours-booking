@@ -1,9 +1,12 @@
 name: Test GitHub Environment Variables
 
 on:
-  push:
+  pull_request:
     branches:
       - main
+    paths-ignore:
+      - ".github/**"
+      - "**.md"
 
 jobs:
   test-env-vars:
