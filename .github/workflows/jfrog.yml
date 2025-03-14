@@ -2,8 +2,8 @@ name: Java CI with Maven & JFrog
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+  # push:
+  #   branches: [main]
 
 jobs:
   build:
@@ -30,6 +30,8 @@ jobs:
         uses: jfrog/setup-jfrog-cli@v4
         with:
           version: latest
+
+      - name: Get and Set version
 
       - name: Configure JFrog CLI
         run: |

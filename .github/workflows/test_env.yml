@@ -1,0 +1,24 @@
+name: Test GitHub Environment Variables
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-env-vars:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set and Append Environment Variables
+        run: |
+          echo "TEST_VERSION=1.2.3" >> $GITHUB_ENV
+          echo "TEST_PATH=/usr/local/bin/test" >> $GITHUB_ENV
+
+      - name: Verify Environment Variables
+        run: |
+          echo "Extracted TEST_VERSION: $TEST_VERSION"
+          echo "Extracted TEST_PATH: $TEST_PATH"
